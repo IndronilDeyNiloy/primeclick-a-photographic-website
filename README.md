@@ -30,7 +30,54 @@ get_header(); ?>
 
 <?php get_footer(); ?>
 
- 2. style.css (Custom Styling)
+2. Show Content to Specific Membership Levels
+
+<?php
+// 1.Show content only to members of level ID 2 and 3
+if ( function_exists( 'rcp_get_current_user_membership_level_ids' ) ) {
+    $level_ids = rcp_get_current_user_membership_level_ids();
+
+    if ( in_array( 2, $level_ids ) || in_array( 3, $level_ids ) ) {
+        echo '<p>Welcome, premium member!</p>';
+    } else {
+        echo '<p>You must be a premium member to view this content.</p>';
+    }
+}
+?>
+// 3. Redirect Non-Members to a Pricing Page
+<?php
+function primeclick_redirect_non_members() {
+    if ( ! function_exists( 'rcp_user_has_active_membership' ) ) return;
+
+    if ( ! rcp_user_has_active_membership() && ! is_page( 'pricing' ) ) {
+        wp_redirect( site_url( '/pricing' ) );
+        exit;
+    }
+}
+add_action( 'template_redirect', 'primeclick_redirect_non_members' );
+?>
+//4. Add a Custom Message Below Restricted Content
+
+
+<?php
+function primeclick_custom_restriction_message( $message ) {
+    return $message . '<br><a href="' . site_url( '/join-now' ) . '">Click here to become a member</a>';
+}
+add_filter( 'rcp_subscription_required_message', 'primeclick_custom_restriction_message' );
+?>
+//5. Display User Membership Details
+<?php
+if ( is_user_logged_in() && function_exists( 'rcp_get_customer' ) ) {
+    $customer = rcp_get_customer( get_current_user_id() );
+
+    if ( $customer ) {
+        echo '<p><strong>Membership Level:</strong> ' . $customer->get_membership_level_names()[0] . '</p>';
+        echo '<p><strong>Status:</strong> ' . $customer->get_status() . '</p>';
+    }
+}
+?>
+
+ 6. style.css (Custom Styling)
 .primeclick-hero {
     background: #fff;
     padding: 40px;
